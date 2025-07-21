@@ -1,0 +1,16 @@
+# Xcode
+DerivedData/
+*.xcworkspace
+xcuserdata/
+*.xcuserstate
+
+# API keys and secrets
+Secrets.xcconfig
+
+# SwiftPM
+.build/
+
+# Other
+.DS_Store
+
+# Security note: Do NOT commit API keys or secrets. Keep Secrets.xcconfig local only.
