@@ -142,5 +142,5 @@ struct PlaceDetailView: View {
 }
 
 #Preview {
-    PlaceDetailView(place: Place(id: UUID(), name: "Test Place", distance: 1000, rating: 4.5, lat: 43.6532, lng: -79.3832, placeId: "test_id"))
-} 
+    PlaceDetailView(place: Place(name: "Test Place", distance: 1000, rating: 4.5, lat: 43.6532, lng: -79.3832, placeId: "test_id", weight: 1))
+}

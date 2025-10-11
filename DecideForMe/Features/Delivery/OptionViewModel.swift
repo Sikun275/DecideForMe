@@ -10,12 +10,17 @@ class OptionViewModel: ObservableObject {
     var filteredOptions: [Option] {
         selectedTags.isEmpty ? options : options.filter { !Set($0.tags).isDisjoint(with: selectedTags) }
     }
-    func addOption(name: String, tags: [String]) {
-        options.append(Option(id: UUID(), name: name, tags: tags, weight: 1))
+    func addOption(name: String, tags: [String], weight: Int = 1) {
+        options.append(Option(id: UUID(), name: name, tags: tags, weight: weight))
     }
     
     func removeOption(_ option: Option) {
         options.removeAll { $0.id == option.id }
+    }
+    
+    func clearAllOptions() {
+        options.removeAll()
+        selectedOption = nil
     }
     
     func allTags() -> [String] {

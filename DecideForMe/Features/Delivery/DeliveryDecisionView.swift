@@ -2,115 +2,101 @@ import SwiftUI
 
 struct DeliveryDecisionView: View {
     @StateObject var vm = OptionViewModel()
+    @Environment(\.dismiss) private var dismiss
     @State private var newName = ""
     @State private var newTags = ""
     @State private var showFeedback = false
     @State private var lastDecision: Option?
+    @State private var isAddingOption = false
+    @State private var showConfetti = false
     
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                TextField("Add option", text: $newName)
-                    .textFieldStyle(.plain)
-                    .padding(8)
-                    .background(Color.white)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.orange, lineWidth: 1))
-                TextField("Tags (comma)", text: $newTags)
-                    .textFieldStyle(.plain)
-                    .padding(8)
-                    .background(Color.white)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.orange, lineWidth: 1))
-                Button("+") {
-                    guard !newName.isEmpty else { return }
-                    let tags = newTags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-                    vm.addOption(name: newName, tags: tags)
-                    newName = ""; newTags = ""
-                }
-                .font(.title2.bold())
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.orange)
-                .cornerRadius(8)
-            }
+        ZStack {
+            // Background
+            Color.white.ignoresSafeArea()
             
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach(vm.allTags(), id: \.self) { tag in
-                        let selected = vm.selectedTags.contains(tag)
-                        Text(tag)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(selected ? Color.orange : Color.white)
-                            .foregroundColor(selected ? .white : .black)
-                            .cornerRadius(10)
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 1))
-                            .onTapGesture {
-                                if selected { vm.selectedTags.remove(tag) } else { vm.selectedTags.insert(tag) }
-                            }
-                    }
-                }
-                .padding(.vertical, 4)
-            }
-            
-            List {
-                ForEach(vm.filteredOptions) { option in
-                    HStack {
-                        Text(option.name)
-                            .fontWeight(.medium)
-                        Spacer()
-                        Text(option.tags.joined(separator: ", "))
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                        Button("✕") { vm.removeOption(option) }
-                            .buttonStyle(BorderlessButtonStyle())
-                            .foregroundColor(.orange)
-                    }
-                }
-            }
-            .frame(maxHeight: 200)
-            .listStyle(.plain)
-            
-            Button("Decide") {
-                vm.decide()
-                lastDecision = vm.selectedOption
-                showFeedback = vm.selectedOption != nil
-            }
-            .font(.title3.bold())
-            .foregroundColor(.white)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 12)
-            .background(vm.filteredOptions.isEmpty ? Color.orange.opacity(0.4) : Color.orange)
-            .cornerRadius(12)
-            .disabled(vm.filteredOptions.isEmpty)
-            
-            if let option = vm.selectedOption {
-                VStack {
-                    Text(option.name)
-                        .font(.title2.bold())
-                        .foregroundColor(.orange)
-                    Text(option.tags.joined(separator: ", ")).font(.caption)
-                    if showFeedback {
-                        HStack(spacing: 24) {
-                            Button("👍") { vm.feedback(liked: true); showFeedback = false }
-                                .font(.title2)
-                                .foregroundColor(.orange)
-                            Button("👎") { vm.feedback(liked: false); showFeedback = false }
-                                .font(.title2)
-                                .foregroundColor(.orange)
+            VStack(spacing: 20) {
+                // Header
+                DeliveryHeaderView()
+                
+                // Add Option Section
+                AddOptionView(
+                    vm: vm,
+                    newName: $newName,
+                    newTags: $newTags,
+                    onAdd: addOption
+                )
+                
+                // Tags Filter
+                TagsFilterView(vm: vm)
+                
+                // Options List
+                OptionsListView(vm: vm)
+                
+                Spacer()
+                
+                // Decision Section
+                DeliveryDecisionResultView(
+                    vm: vm,
+                    showFeedback: $showFeedback,
+                    onDecision: makeDecision,
+                    onFeedback: { liked in
+                        vm.feedback(liked: liked)
+                        showFeedback = false
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            vm.selectedOption = nil
                         }
                     }
-                }
-                .padding(.top, 8)
+                )
             }
-            Spacer()
         }
-        .padding()
-        .background(Color.white)
-        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title3)
+                        .foregroundColor(.orange)
+                }
+            }
+        }
+    }
+    
+    private func addOption() {
+        guard !newName.isEmpty else { return }
+        
+        let tags = newTags.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        vm.addOption(name: newName, tags: tags)
+        
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+            newName = ""
+            newTags = ""
+        }
+        
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+    }
+    
+    private func makeDecision() {
+        vm.decide()
+        lastDecision = vm.selectedOption
+        
+        if vm.selectedOption != nil {
+            showFeedback = true
+            
+            // Haptic feedback
+            let notificationFeedback = UINotificationFeedbackGenerator()
+            notificationFeedback.notificationOccurred(.success)
+        }
     }
 }
 
 #Preview {
-    DeliveryDecisionView()
+    NavigationView {
+        DeliveryDecisionView()
+    }
 } 

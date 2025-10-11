@@ -1,23 +1,85 @@
 import Foundation
+import CoreLocation
 
-class MapDecisionViewModel: ObservableObject {
+class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var keyword: String = ""
     @Published var places: [Place] = []
     @Published var selectedPlace: Place?
     @Published var minRating: Double = 0
     @Published var maxDistance: Double = 5000
+    @Published var currentLocation: CLLocation?
+    @Published var locationPermissionStatus: CLAuthorizationStatus = .notDetermined
+    
+    // Load saved places on initialization
+    private var savedPlaces: [Place] = Place.load()
+    
+    private let locationManager = CLLocationManager()
+    private let defaultLocation = CLLocation(latitude: 43.6532, longitude: -79.3832) // Toronto
     
     private var apiKey: String {
         Bundle.main.infoDictionary?["GOOGLE_PLACES_API_KEY"] as? String ?? "NULL"
     }
-    // Default location (latitude, longitude) - e.g., Toronto
-    private let defaultLocation = (lat: 43.6532, lng: -79.3832)
+    
+    override init() {
+        super.init()
+        setupLocationManager()
+    }
+    
+    private func setupLocationManager() {
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+    
+    func requestLocationPermission() {
+        switch locationManager.authorizationStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.requestLocation()
+        case .denied, .restricted:
+            currentLocation = defaultLocation
+        @unknown default:
+            currentLocation = defaultLocation
+        }
+    }
+    
+    // MARK: - CLLocationManagerDelegate
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        currentLocation = location
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location error: \(error.localizedDescription)")
+        currentLocation = defaultLocation
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        locationPermissionStatus = status
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.requestLocation()
+        case .denied, .restricted:
+            currentLocation = defaultLocation
+        case .notDetermined:
+            break
+        @unknown default:
+            currentLocation = defaultLocation
+        }
+    }
     
     func search() {
         guard !keyword.isEmpty else { places = []; return }
         let radius = Int(maxDistance)
         let query = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(defaultLocation.lat),\(defaultLocation.lng)&radius=\(radius)&keyword=\(query)&key=\(apiKey)"
+        
+        // Use current location if available, otherwise use default
+        let searchLocation = currentLocation ?? defaultLocation
+        let lat = searchLocation.coordinate.latitude
+        let lng = searchLocation.coordinate.longitude
+        
+        let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(lat),\(lng)&radius=\(radius)&keyword=\(query)&key=\(apiKey)"
         //print("API URL: \(urlString)")
         //print("Google Places API Key: \(apiKey)")
         guard let url = URL(string: urlString) else { return }
@@ -33,15 +95,21 @@ class MapDecisionViewModel: ObservableObject {
                     print("Place \(index + 1): \(place.name), place_id: \(place.placeId)")
                 }
                 DispatchQueue.main.async {
-                    self?.places = decoded.results.map {
-                        Place(
-                            id: UUID(),
-                            name: $0.name,
-                            distance: $0.geometry.location.distance(from: self?.defaultLocation ?? (0,0)),
-                            rating: $0.rating ?? 0,
-                            lat: $0.geometry.location.lat,
-                            lng: $0.geometry.location.lng,
-                            placeId: $0.placeId
+                    self?.places = decoded.results.map { gPlace in
+                        let distance = gPlace.geometry.location.distance(from: (lat, lng))
+                        
+                        // Check if we have saved data for this place
+                        let savedPlace = self?.savedPlaces.first { $0.placeId == gPlace.placeId }
+                        let weight = savedPlace?.weight ?? 1
+                        
+                        return Place(
+                            name: gPlace.name,
+                            distance: distance,
+                            rating: gPlace.rating ?? 0,
+                            lat: gPlace.geometry.location.lat,
+                            lng: gPlace.geometry.location.lng,
+                            placeId: gPlace.placeId,
+                            weight: weight
                         )
                     }
                 }
@@ -57,15 +125,50 @@ class MapDecisionViewModel: ObservableObject {
     }
     
     func decide() {
-        selectedPlace = filtered.randomElement()
+        // Use weighted random selection based on combined score
+        let weightedPlaces = filtered.flatMap { place in
+            let score = place.combinedScore()
+            let weight = max(Int(score * 10), 1) // Convert score to integer weight
+            return Array(repeating: place, count: weight)
+        }
+        selectedPlace = weightedPlaces.randomElement()
     }
     
     func feedback(liked: Bool) {
-        // Placeholder for future user history logic
+        guard let selectedPlace = selectedPlace,
+              let index = places.firstIndex(where: { $0.placeId == selectedPlace.placeId }) else { return }
+        
+        // Update weight based on feedback
+        places[index].weight += liked ? 1 : -1
+        places[index].weight = max(places[index].weight, 1) // Ensure minimum weight of 1
+        
+        // Update saved places
+        updateSavedPlaces()
+    }
+    
+    private func updateSavedPlaces() {
+        // Merge current places with saved places, updating weights
+        var updatedSavedPlaces = savedPlaces
+        
+        for place in places {
+            if let savedIndex = updatedSavedPlaces.firstIndex(where: { $0.placeId == place.placeId }) {
+                updatedSavedPlaces[savedIndex].weight = place.weight
+            } else {
+                updatedSavedPlaces.append(place)
+            }
+        }
+        
+        savedPlaces = updatedSavedPlaces
+        Place.save(savedPlaces)
     }
     
     func removePlace(_ place: Place) {
         places.removeAll { $0.id == place.id }
+    }
+    
+    func clearAllPlaces() {
+        places.removeAll()
+        selectedPlace = nil
     }
     
     func fetchPlaceDetails(placeId: String, completion: @escaping (PlaceDetail?) -> Void) {

@@ -3,14 +3,33 @@ DerivedData/
 *.xcworkspace
 xcuserdata/
 *.xcuserstate
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
 
 # API keys and secrets
 Secrets.xcconfig
+*.xcconfig
+config.plist
+secrets.plist
 
 # SwiftPM
 .build/
+.swiftpm/
+
+# CocoaPods
+Pods/
+*.podspec
+
+# Carthage
+Carthage/Build/
 
 # Other
 .DS_Store
+*.log
+*.tmp
+*.swp
+*~.nib
 
 # Security note: Do NOT commit API keys or secrets. Keep Secrets.xcconfig local only.

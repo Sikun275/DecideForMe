@@ -2,89 +2,106 @@ import SwiftUI
 
 struct MapDecisionView: View {
     @StateObject var vm = MapDecisionViewModel()
-    @State private var minRatingInput = ""
-    @State private var maxDistanceInput = ""
+    @Environment(\.dismiss) private var dismiss
     @State private var showMap = false
-   
+    @State private var isSearching = false
+    @State private var showFilters = false
     
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                // Removed custom back button
-            }
-            .padding(.top)
-            HStack {
-                TextField("Search for a place", text: $vm.keyword)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                Button("Search") { vm.search() }
-            }
-            HStack {
-                Text("Min Rating")
-                TextField("0-5", text: $minRatingInput)
-                    .keyboardType(.decimalPad)
-                    .frame(width: 60)
-                Button("Set") {
-                    if let val = Double(minRatingInput), val >= 0, val <= 5 { vm.minRating = val }
-                }
-                Text(String(format: "%.1f", vm.minRating))
-            }
-            HStack {
-                Text("Max Distance (km)")
-                TextField("0.1-50", text: $maxDistanceInput)
-                    .keyboardType(.decimalPad)
-                    .frame(width: 80)
-                Button("Set") {
-                    if let val = Double(maxDistanceInput), val >= 0.1, val <= 50 { vm.maxDistance = val * 1000 }
-                }
-                Text(String(format: "%.1f", vm.maxDistance / 1000))
-            }
-            List(vm.filtered) { place in
-                HStack {
-                    NavigationLink(destination: PlaceDetailView(place: place)) {
-                        VStack(alignment: .leading) {
-                            Text(place.name).font(.headline)
-                            HStack {
-                                Text(String(format: "%.2f km", place.distance / 1000))
-                                Text("⭐️ \(String(format: "%.1f", place.rating))")
-                            }.font(.caption)
+        ZStack {
+            // Background
+            Color.white.ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                // Header
+                MapHeaderView()
+                
+                // Search Section
+                MapSearchView(
+                    viewModel: vm,
+                    isSearching: $isSearching,
+                    onSearch: performSearch
+                )
+                
+                // Filters Section
+                MapFiltersView(
+                    viewModel: vm,
+                    showFilters: $showFilters
+                )
+                
+                // Results Section
+                MapResultsView(viewModel: vm)
+                
+                Spacer()
+                
+                // Decision Section
+                VStack(spacing: 16) {
+                    if let place = vm.selectedPlace {
+                        PlaceDecisionView(place: place, showMap: $showMap) { liked in
+                            vm.feedback(liked: liked)
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                vm.selectedPlace = nil
+                            }
                         }
+                    } else {
+                        MapDecisionButtonView(viewModel: vm, onDecision: makeDecision)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    Spacer()
-                    Button("✕") {
-                        vm.removePlace(place)
-                    }
-                    .buttonStyle(BorderlessButtonStyle())
-                    .foregroundColor(.red)
                 }
+                .padding(.horizontal)
+                .padding(.bottom, 20)
             }
-            .frame(maxHeight: 400)
-            Button("Decide") { vm.decide() }
-                .disabled(vm.filtered.isEmpty)
-            if let place = vm.selectedPlace {
-                VStack {
-                    Text("Chosen: \(place.name)").font(.title2)
-                    Text(String(format: "%.2f km, ⭐️ %.1f", place.distance / 1000, place.rating))
-                        .font(.caption)
-                    HStack {
-                        Button("👍") { vm.feedback(liked: true) }
-                        Button("👎") { vm.feedback(liked: false) }
-                    }
-                    Button("Show on Map") {
-                        showMap = true
-                    }
-                }
-                .sheet(isPresented: $showMap) {
-                    NearbyMapViewContainer(lat: place.lat, lng: place.lng, apiKey: Bundle.main.infoDictionary?["GOOGLE_PLACES_API_KEY"] as? String ?? "")
-                }
-            }
-            Spacer()
         }
-        .navigationTitle("Map Decision")
-        .padding()
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.title3)
+                        .foregroundColor(.orange)
+                }
+            }
+        }
+        .onAppear {
+            vm.requestLocationPermission()
+        }
+        .sheet(isPresented: $showMap) {
+            NearbyMapViewContainer(lat: vm.selectedPlace?.lat ?? 0, lng: vm.selectedPlace?.lng ?? 0, apiKey: Bundle.main.infoDictionary?["GOOGLE_PLACES_API_KEY"] as? String ?? "")
+        }
+    }
+    
+    private func performSearch() {
+        guard !vm.keyword.isEmpty else { return }
+        
+        isSearching = true
+        
+        vm.search()
+        
+        // Simulate search delay for better UX
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            isSearching = false
+        }
+        
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
+    }
+    
+    private func makeDecision() {
+        vm.decide()
+        
+        if vm.selectedPlace != nil {
+            // Haptic feedback
+            let notificationFeedback = UINotificationFeedbackGenerator()
+            notificationFeedback.notificationOccurred(.success)
+        }
     }
 }
 
 #Preview {
-    MapDecisionView()
+    NavigationView {
+        MapDecisionView()
+    }
 } 

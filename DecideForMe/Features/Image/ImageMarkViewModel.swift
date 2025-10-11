@@ -29,6 +29,10 @@ class ImageMarkViewModel: ObservableObject {
         selectedMark = marks.randomElement()
     }
     
+    func selectMark(_ mark: ImageMark) {
+        selectedMark = mark
+    }
+    
     func clearSelection() {
         selectedMark = nil
     }

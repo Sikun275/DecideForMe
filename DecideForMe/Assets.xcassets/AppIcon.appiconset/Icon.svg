@@ -1,0 +1,36 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#FF6B35" rx="200"/>
+  
+  <!-- Dice -->
+  <g transform="translate(200, 200)">
+    <rect width="200" height="200" fill="white" rx="30" stroke="#333" stroke-width="8"/>
+    <circle cx="80" cy="80" r="20" fill="#FF6B35"/>
+    <circle cx="160" cy="80" r="20" fill="#FF6B35"/>
+    <circle cx="80" cy="160" r="20" fill="#FF6B35"/>
+    <circle cx="160" cy="160" r="20" fill="#FF6B35"/>
+    <circle cx="120" cy="120" r="20" fill="#FF6B35"/>
+  </g>
+  
+  <!-- Decision Arrow -->
+  <g transform="translate(500, 300)">
+    <path d="M 0 0 L 200 100 L 0 200 Z" fill="white" stroke="#333" stroke-width="8"/>
+  </g>
+  
+  <!-- Choice Options -->
+  <g transform="translate(700, 200)">
+    <rect width="120" height="120" fill="white" rx="20" stroke="#333" stroke-width="6"/>
+    <text x="60" y="70" font-family="Arial" font-size="40" font-weight="bold" text-anchor="middle" fill="#FF6B35">A</text>
+  </g>
+  
+  <g transform="translate(700, 400)">
+    <rect width="120" height="120" fill="white" rx="20" stroke="#333" stroke-width="6"/>
+    <text x="60" y="70" font-family="Arial" font-size="40" font-weight="bold" text-anchor="middle" fill="#FF6B35">B</text>
+  </g>
+  
+  <!-- Question Mark -->
+  <g transform="translate(450, 600)">
+    <circle cx="60" cy="60" r="60" fill="white" stroke="#333" stroke-width="8"/>
+    <text x="60" y="80" font-family="Arial" font-size="60" font-weight="bold" text-anchor="middle" fill="#FF6B35">?</text>
+  </g>
+</svg>
