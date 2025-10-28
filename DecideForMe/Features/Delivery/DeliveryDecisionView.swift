@@ -50,8 +50,8 @@ struct DeliveryDecisionView: View {
                 )
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbar(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {

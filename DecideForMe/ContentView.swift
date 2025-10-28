@@ -92,7 +92,7 @@ struct ContentView: View {
                 }
                 .padding()
             }
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: String.self) { route in
                 switch route {
                 case "delivery":

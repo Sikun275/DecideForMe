@@ -51,8 +51,8 @@ struct MapDecisionView: View {
                 .padding(.bottom, 20)
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbar(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {

@@ -24,8 +24,8 @@ struct ImageMarkView: View {
             }
             .padding(.horizontal)
         }
-        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        .toolbar(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
@@ -37,19 +37,14 @@ struct ImageMarkView: View {
                 }
             }
         }
-        .actionSheet(isPresented: $showingSourceActionSheet) {
-            ActionSheet(
-                title: Text("Select Image Source"),
-                buttons: [
-                    .default(Text("Photo Library")) {
-                        showingImagePicker = true
-                    },
-                    .default(Text("Camera")) {
-                        showingCamera = true
-                    },
-                    .cancel()
-                ]
-            )
+        .confirmationDialog("Select Image Source", isPresented: $showingSourceActionSheet) {
+            Button("Photo Library") {
+                showingImagePicker = true
+            }
+            Button("Camera") {
+                showingCamera = true
+            }
+            Button("Cancel", role: .cancel) { }
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(image: $vm.selectedImage)

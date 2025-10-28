@@ -28,7 +28,7 @@ struct ImageDisplayView: View {
                                     imageSize = image.size
                                     displaySize = geometry.size
                                 }
-                                .onChange(of: geometry.size) { newSize in
+                                .onChange(of: geometry.size) { _, newSize in
                                     displaySize = newSize
                                 }
                         }
