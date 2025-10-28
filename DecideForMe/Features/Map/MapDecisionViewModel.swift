@@ -79,42 +79,141 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
         let lat = searchLocation.coordinate.latitude
         let lng = searchLocation.coordinate.longitude
         
+        // Try nearby search first, then fallback to text search
+        performNearbySearch(lat: lat, lng: lng, radius: radius, query: query)
+    }
+    
+    private func performNearbySearch(lat: Double, lng: Double, radius: Int, query: String) {
         let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(lat),\(lng)&radius=\(radius)&keyword=\(query)&key=\(apiKey)"
-        //print("API URL: \(urlString)")
-        //print("Google Places API Key: \(apiKey)")
-        guard let url = URL(string: urlString) else { return }
+        print("🔍 Nearby Search API URL: \(urlString)")
+        print("🔑 Google Places API Key: \(apiKey)")
+        print("📍 Search Location: \(lat), \(lng)")
+        print("🔎 Search Keyword: '\(keyword)'")
+        print("📏 Search Radius: \(radius)m")
+        
+        guard let url = URL(string: urlString) else { 
+            print("❌ Invalid URL")
+            return 
+        }
         
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            print("Error: \(error?.localizedDescription ?? "none")")
-            guard let data = data, error == nil else { return }
-            print("Raw response: \(String(data: data, encoding: .utf8)?.prefix(500) ?? "")")
+            print("🌐 Network Error: \(error?.localizedDescription ?? "none")")
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📡 HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data, error == nil else { 
+                print("❌ No data received or error occurred")
+                DispatchQueue.main.async { self?.places = [] }
+                return 
+            }
+            
+            let responseString = String(data: data, encoding: .utf8) ?? ""
+            print("📄 Raw API Response: \(responseString.prefix(1000))")
+            
             do {
-                let decoded = try JSONDecoder().decode(GPlacesResponse.self, from: data)
-                print("Found \(decoded.results.count) places")
-                for (index, place) in decoded.results.enumerated() {
-                    print("Place \(index + 1): \(place.name), place_id: \(place.placeId)")
-                }
-                DispatchQueue.main.async {
-                    self?.places = decoded.results.map { gPlace in
-                        let distance = gPlace.geometry.location.distance(from: (lat, lng))
-                        
-                        // Check if we have saved data for this place
-                        let savedPlace = self?.savedPlaces.first { $0.placeId == gPlace.placeId }
-                        let weight = savedPlace?.weight ?? 1
-                        
-                        return Place(
-                            name: gPlace.name,
-                            distance: distance,
-                            rating: gPlace.rating ?? 0,
-                            lat: gPlace.geometry.location.lat,
-                            lng: gPlace.geometry.location.lng,
-                            placeId: gPlace.placeId,
-                            weight: weight
-                        )
+                // First try to decode as a standard response
+                if let decoded = try? JSONDecoder().decode(GPlacesResponse.self, from: data) {
+                    print("✅ Successfully decoded \(decoded.results.count) places")
+                    for (index, place) in decoded.results.enumerated() {
+                        print("📍 Place \(index + 1): \(place.name), place_id: \(place.placeId)")
+                    }
+                    DispatchQueue.main.async {
+                        self?.places = decoded.results.map { gPlace in
+                            let distance = gPlace.geometry.location.distance(from: (lat, lng))
+                            
+                            // Check if we have saved data for this place
+                            let savedPlace = self?.savedPlaces.first { $0.placeId == gPlace.placeId }
+                            let weight = savedPlace?.weight ?? 1
+                            
+                            return Place(
+                                name: gPlace.name,
+                                distance: distance,
+                                rating: gPlace.rating ?? 0,
+                                lat: gPlace.geometry.location.lat,
+                                lng: gPlace.geometry.location.lng,
+                                placeId: gPlace.placeId,
+                                weight: weight
+                            )
+                        }
+                    }
+                } else {
+                    // Try to decode as error response
+                    if let errorResponse = try? JSONDecoder().decode(GoogleAPIError.self, from: data) {
+                        print("❌ Google API Error: \(errorResponse.errorMessage)")
+                        if errorResponse.status == "ZERO_RESULTS" {
+                            print("🔄 No results found, trying text search...")
+                            self?.performTextSearch(query: query)
+                        } else {
+                            DispatchQueue.main.async { self?.places = [] }
+                        }
+                    } else {
+                        print("❌ Unknown response format")
+                        DispatchQueue.main.async { self?.places = [] }
                     }
                 }
             } catch {
-                print("Decoding error: \(error)")
+                print("❌ JSON Decoding Error: \(error)")
+                print("📄 Raw response that failed to decode: \(responseString)")
+                DispatchQueue.main.async { self?.places = [] }
+            }
+        }.resume()
+    }
+    
+    private func performTextSearch(query: String) {
+        let urlString = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=\(query)&key=\(apiKey)"
+        print("🔍 Text Search API URL: \(urlString)")
+        
+        guard let url = URL(string: urlString) else { 
+            print("❌ Invalid Text Search URL")
+            DispatchQueue.main.async { self.places = [] }
+            return 
+        }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            print("🌐 Text Search Network Error: \(error?.localizedDescription ?? "none")")
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📡 Text Search HTTP Status: \(httpResponse.statusCode)")
+            }
+            
+            guard let data = data, error == nil else { 
+                print("❌ Text Search: No data received")
+                DispatchQueue.main.async { self?.places = [] }
+                return 
+            }
+            
+            let responseString = String(data: data, encoding: .utf8) ?? ""
+            print("📄 Text Search Raw Response: \(responseString.prefix(1000))")
+            
+            do {
+                if let decoded = try? JSONDecoder().decode(GPlacesResponse.self, from: data) {
+                    print("✅ Text Search: Successfully decoded \(decoded.results.count) places")
+                    DispatchQueue.main.async {
+                        self?.places = decoded.results.map { gPlace in
+                            let distance = gPlace.geometry.location.distance(from: (self?.currentLocation?.coordinate.latitude ?? 43.6532, self?.currentLocation?.coordinate.longitude ?? -79.3832))
+                            
+                            let savedPlace = self?.savedPlaces.first { $0.placeId == gPlace.placeId }
+                            let weight = savedPlace?.weight ?? 1
+                            
+                            return Place(
+                                name: gPlace.name,
+                                distance: distance,
+                                rating: gPlace.rating ?? 0,
+                                lat: gPlace.geometry.location.lat,
+                                lng: gPlace.geometry.location.lng,
+                                placeId: gPlace.placeId,
+                                weight: weight
+                            )
+                        }
+                    }
+                } else {
+                    print("❌ Text Search: Failed to decode response")
+                    DispatchQueue.main.async { self?.places = [] }
+                }
+            } catch {
+                print("❌ Text Search Decoding Error: \(error)")
                 DispatchQueue.main.async { self?.places = [] }
             }
         }.resume()
@@ -206,6 +305,16 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
 
 struct GPlacesResponse: Codable {
     let results: [GPlace]
+}
+
+struct GoogleAPIError: Codable {
+    let status: String
+    let errorMessage: String
+    
+    enum CodingKeys: String, CodingKey {
+        case status
+        case errorMessage = "error_message"
+    }
 }
 
 struct GPlace: Codable {
