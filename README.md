@@ -80,37 +80,6 @@ A SwiftUI iOS application that helps users make decisions through three distinct
 - Never commit API keys to version control
 - Use environment-specific configuration files for different build targets
 
-## 🏗 Project Structure
-
-```
-DecideForMe/
-├── DecideForMe/
-│   ├── DecideForMeApp.swift          # App entry point
-│   ├── ContentView.swift             # Main navigation hub
-│   ├── Features/
-│   │   ├── Delivery/
-│   │   │   ├── Option.swift          # Data model
-│   │   │   ├── OptionViewModel.swift # Business logic
-│   │   │   └── DeliveryDecisionView.swift # UI
-│   │   ├── Map/
-│   │   │   ├── Place.swift           # Place data model
-│   │   │   ├── MapDecisionViewModel.swift # Location & API logic
-│   │   │   ├── MapDecisionView.swift # Main map UI
-│   │   │   ├── PlaceDetailView.swift # Place details
-│   │   │   └── NearbyMapView.swift   # Interactive map
-│   │   └── Image/
-│   │       ├── ImageMark.swift       # Mark data model
-│   │       ├── ImageMarkViewModel.swift # Image logic
-│   │       └── ImageMarkView.swift   # Image UI
-│   ├── Info.plist                    # App configuration
-│   └── Assets.xcassets/              # App assets
-├── DecideForMeTests/
-│   └── DecideForMeTests.swift        # Unit tests
-├── DecideForMeUITests/               # UI tests
-├── Secrets.xcconfig                  # API keys (gitignored)
-└── README.md                         # This file
-```
-
 ## 🧪 Testing
 
 ### Running Tests
