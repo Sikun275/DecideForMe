@@ -34,10 +34,11 @@ struct ContentView: View {
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundColor(.black)
                         
-                        Text("Let us help you decide")
+                        Text("'idk lol' isn't a strategy")
                             .font(.system(size: 16, weight: .medium, design: .rounded))
                             .foregroundColor(.orange)
                             .opacity(0.8)
+                            .multilineTextAlignment(.center)
                     }
                     .padding(.top, 40)
                     
@@ -85,7 +86,7 @@ struct ContentView: View {
                     Spacer()
                     
                     // Footer
-                    Text("Tap any feature to get started")
+                    Text("Tap any button to get started :)")
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundColor(.gray)
                         .padding(.bottom, 20)

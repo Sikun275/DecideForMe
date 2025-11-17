@@ -75,9 +75,18 @@ struct PlaceRowView: View {
 }
 
 #Preview {
-    PlaceRowView(
-        place: Place(name: "Sample Restaurant", distance: 1500, rating: 4.5, lat: 37.7749, lng: -122.4194, placeId: "sample_place_id"),
-        viewModel: MapDecisionViewModel(),
-        onDelete: {}
-    )
+    VStack(spacing: 12) {
+        PlaceRowView(
+            place: Place(name: "Sample Rest 1", distance: 150, rating: 4.5, lat: 37.7749, lng: -122.4194, placeId: "sample_1_id"),
+            viewModel: MapDecisionViewModel(),
+            onDelete: {}
+        )
+        
+        PlaceRowView(
+            place: Place(name: "Bella Vista Italian", distance: 850, rating: 4.8, lat: 37.7849, lng: -122.4094, placeId: "sample_2_id"),
+            viewModel: MapDecisionViewModel(),
+            onDelete: {}
+        )
+    }
+    .padding()
 }

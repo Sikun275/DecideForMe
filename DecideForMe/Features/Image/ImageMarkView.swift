@@ -10,6 +10,7 @@ struct ImageMarkView: View {
     @State private var showingRenameAlert = false
     @State private var markToRename: ImageMark?
     @State private var newMarkName = ""
+    @State private var showingSampleImages = false
     
     var body: some View {
         ZStack {
@@ -44,10 +45,16 @@ struct ImageMarkView: View {
             Button("Camera") {
                 showingCamera = true
             }
+            Button("Sample Images") {
+                showingSampleImages = true
+            }
             Button("Cancel", role: .cancel) { }
         }
-        .sheet(isPresented: $showingImagePicker) {
+        .sheet(isPresented: $showingImagePicker) {  
             ImagePicker(image: $vm.selectedImage)
+        }
+        .sheet(isPresented: $showingSampleImages) {
+            SampleImagesView(selectedImage: $vm.selectedImage)
         }
         .sheet(isPresented: $showingCamera) {
             CameraPicker(image: $vm.selectedImage)

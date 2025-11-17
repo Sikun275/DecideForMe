@@ -13,7 +13,7 @@ struct ImageHeaderView: View {
                 Spacer()
             }
             
-            Text("Mark your image and let us choose for you")
+            Text("Take your photo shot and let us choose for you")
                 .font(.subheadline)
                 .foregroundColor(.gray)
         }

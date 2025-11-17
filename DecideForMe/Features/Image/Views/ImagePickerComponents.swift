@@ -3,6 +3,7 @@ import PhotosUI
 
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
+    var onCancel: (() -> Void)? = nil
     
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var config = PHPickerConfiguration()
@@ -17,20 +18,26 @@ struct ImagePicker: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator(self, onCancel: onCancel)
     }
     
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
         let parent: ImagePicker
+        var onCancel: (() -> Void)?
         
-        init(_ parent: ImagePicker) {
+        init(_ parent: ImagePicker, onCancel: (() -> Void)? = nil) {
             self.parent = parent
+            self.onCancel = onCancel
         }
         
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             picker.dismiss(animated: true)
             
-            guard let provider = results.first?.itemProvider else { return }
+            // If no results (user cancelled or no images selected), trigger onCancel
+            guard let provider = results.first?.itemProvider else {
+                onCancel?()
+                return
+            }
             
             if provider.canLoadObject(ofClass: UIImage.self) {
                 provider.loadObject(ofClass: UIImage.self) { image, _ in
@@ -38,6 +45,8 @@ struct ImagePicker: UIViewControllerRepresentable {
                         self.parent.image = image as? UIImage
                     }
                 }
+            } else {
+                onCancel?()
             }
         }
     }

@@ -9,6 +9,8 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
     @Published var maxDistance: Double = 5000
     @Published var currentLocation: CLLocation?
     @Published var locationPermissionStatus: CLAuthorizationStatus = .notDetermined
+    @Published var searchErrorState: SearchErrorState = .noSearchPerformed
+    @Published var hasSearched: Bool = false
     
     // Load saved places on initialization
     private var savedPlaces: [Place] = Place.load()
@@ -70,7 +72,28 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
     }
     
     func search() {
-        guard !keyword.isEmpty else { places = []; return }
+        hasSearched = true
+        
+        guard !keyword.isEmpty else {
+            places = []
+            searchErrorState = .emptyKeyword
+            return
+        }
+        
+        // Check API key
+        if apiKey == "NULL" || apiKey.isEmpty {
+            places = []
+            searchErrorState = .apiKeyInvalid
+            return
+        }
+        
+        // Check location permission
+        if locationPermissionStatus == .denied || locationPermissionStatus == .restricted {
+            searchErrorState = .locationDenied
+        } else {
+            searchErrorState = .none
+        }
+        
         let radius = Int(maxDistance)
         let query = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         
@@ -105,7 +128,19 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
             
             guard let data = data, error == nil else { 
                 print("❌ No data received or error occurred")
-                DispatchQueue.main.async { self?.places = [] }
+                DispatchQueue.main.async {
+                    self?.places = []
+                    if let error = error {
+                        let nsError = error as NSError
+                        if nsError.domain == NSURLErrorDomain {
+                            self?.searchErrorState = .networkError
+                        } else {
+                            self?.searchErrorState = .unknownError
+                        }
+                    } else {
+                        self?.searchErrorState = .networkError
+                    }
+                }
                 return 
             }
             
@@ -115,27 +150,68 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
             do {
                 // First try to decode as a standard response
                 if let decoded = try? JSONDecoder().decode(GPlacesResponse.self, from: data) {
-                    print("✅ Successfully decoded \(decoded.results.count) places")
-                    for (index, place) in decoded.results.enumerated() {
-                        print("📍 Place \(index + 1): \(place.name), place_id: \(place.placeId)")
-                    }
-                    DispatchQueue.main.async {
-                        self?.places = decoded.results.map { gPlace in
-                            let distance = gPlace.geometry.location.distance(from: (lat, lng))
-                            
-                            // Check if we have saved data for this place
-                            let savedPlace = self?.savedPlaces.first { $0.placeId == gPlace.placeId }
-                            let weight = savedPlace?.weight ?? 1
-                            
-                            return Place(
-                                name: gPlace.name,
-                                distance: distance,
-                                rating: gPlace.rating ?? 0,
-                                lat: gPlace.geometry.location.lat,
-                                lng: gPlace.geometry.location.lng,
-                                placeId: gPlace.placeId,
-                                weight: weight
-                            )
+                    // Check the status field
+                    if decoded.status == "OK" {
+                        print("✅ Successfully decoded \(decoded.results.count) places")
+                        for (index, place) in decoded.results.enumerated() {
+                            print("📍 Place \(index + 1): \(place.name), place_id: \(place.placeId)")
+                        }
+                        DispatchQueue.main.async {
+                            self?.places = decoded.results.map { gPlace in
+                                let distance = gPlace.geometry.location.distance(from: (lat, lng))
+                                
+                                // Check if we have saved data for this place
+                                let savedPlace = self?.savedPlaces.first { $0.placeId == gPlace.placeId }
+                                let weight = savedPlace?.weight ?? 1
+                                
+                                return Place(
+                                    name: gPlace.name,
+                                    distance: distance,
+                                    rating: gPlace.rating ?? 0,
+                                    lat: gPlace.geometry.location.lat,
+                                    lng: gPlace.geometry.location.lng,
+                                    placeId: gPlace.placeId,
+                                    weight: weight
+                                )
+                            }
+                            // Clear error if we have results
+                            if self?.places.isEmpty == false {
+                                self?.searchErrorState = .none
+                            }
+                        }
+                    } else if decoded.status == "ZERO_RESULTS" {
+                        print("🔄 No results found, trying text search...")
+                        // Don't set error state yet, wait for text search to complete
+                        self?.performTextSearch(query: query)
+                    } else {
+                        // Try to decode as error response to get error message
+                        var errorMessage = decoded.status
+                        if let errorResponse = try? JSONDecoder().decode(GoogleAPIError.self, from: data) {
+                            errorMessage = errorResponse.errorMessage
+                            print("❌ Google API Error Status: \(decoded.status), Message: \(errorMessage)")
+                        } else {
+                            print("❌ Google API Error Status: \(decoded.status)")
+                        }
+                        
+                        DispatchQueue.main.async {
+                            self?.places = []
+                            // Classify API errors
+                            switch decoded.status {
+                            case "REQUEST_DENIED":
+                                if errorMessage.contains("API key") || errorMessage.contains("key") {
+                                    self?.searchErrorState = .apiKeyInvalid
+                                } else {
+                                    self?.searchErrorState = .apiError(errorMessage)
+                                }
+                            case "INVALID_REQUEST":
+                                self?.searchErrorState = .apiError("Invalid request: \(errorMessage)")
+                            case "OVER_QUERY_LIMIT":
+                                self?.searchErrorState = .apiError("API quota exceeded. Please try again later.")
+                            case "UNKNOWN_ERROR":
+                                self?.searchErrorState = .unknownError
+                            default:
+                                self?.searchErrorState = .apiError(errorMessage)
+                            }
                         }
                     }
                 } else {
@@ -146,17 +222,39 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
                             print("🔄 No results found, trying text search...")
                             self?.performTextSearch(query: query)
                         } else {
-                            DispatchQueue.main.async { self?.places = [] }
+                            DispatchQueue.main.async {
+                                self?.places = []
+                                switch errorResponse.status {
+                                case "REQUEST_DENIED":
+                                    if errorResponse.errorMessage.contains("API key") || errorResponse.errorMessage.contains("key") {
+                                        self?.searchErrorState = .apiKeyInvalid
+                                    } else {
+                                        self?.searchErrorState = .apiError(errorResponse.errorMessage)
+                                    }
+                                case "INVALID_REQUEST":
+                                    self?.searchErrorState = .apiError("Invalid request: \(errorResponse.errorMessage)")
+                                case "OVER_QUERY_LIMIT":
+                                    self?.searchErrorState = .apiError("API quota exceeded. Please try again later.")
+                                default:
+                                    self?.searchErrorState = .apiError(errorResponse.errorMessage)
+                                }
+                            }
                         }
                     } else {
                         print("❌ Unknown response format")
-                        DispatchQueue.main.async { self?.places = [] }
+                        DispatchQueue.main.async {
+                            self?.places = []
+                            self?.searchErrorState = .unknownError
+                        }
                     }
                 }
             } catch {
                 print("❌ JSON Decoding Error: \(error)")
                 print("📄 Raw response that failed to decode: \(responseString)")
-                DispatchQueue.main.async { self?.places = [] }
+                DispatchQueue.main.async {
+                    self?.places = []
+                    self?.searchErrorState = .unknownError
+                }
             }
         }.resume()
     }
@@ -180,7 +278,19 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
             
             guard let data = data, error == nil else { 
                 print("❌ Text Search: No data received")
-                DispatchQueue.main.async { self?.places = [] }
+                DispatchQueue.main.async {
+                    self?.places = []
+                    if let error = error {
+                        let nsError = error as NSError
+                        if nsError.domain == NSURLErrorDomain {
+                            self?.searchErrorState = .networkError
+                        } else {
+                            self?.searchErrorState = .unknownError
+                        }
+                    } else {
+                        self?.searchErrorState = .networkError
+                    }
+                }
                 return 
             }
             
@@ -189,38 +299,94 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
             
             do {
                 if let decoded = try? JSONDecoder().decode(GPlacesResponse.self, from: data) {
-                    print("✅ Text Search: Successfully decoded \(decoded.results.count) places")
-                    DispatchQueue.main.async {
-                        self?.places = decoded.results.map { gPlace in
-                            let distance = gPlace.geometry.location.distance(from: (self?.currentLocation?.coordinate.latitude ?? 43.6532, self?.currentLocation?.coordinate.longitude ?? -79.3832))
-                            
-                            let savedPlace = self?.savedPlaces.first { $0.placeId == gPlace.placeId }
-                            let weight = savedPlace?.weight ?? 1
-                            
-                            return Place(
-                                name: gPlace.name,
-                                distance: distance,
-                                rating: gPlace.rating ?? 0,
-                                lat: gPlace.geometry.location.lat,
-                                lng: gPlace.geometry.location.lng,
-                                placeId: gPlace.placeId,
-                                weight: weight
-                            )
+                    if decoded.status == "OK" {
+                        print("✅ Text Search: Successfully decoded \(decoded.results.count) places")
+                        DispatchQueue.main.async {
+                            self?.places = decoded.results.map { gPlace in
+                                let distance = gPlace.geometry.location.distance(from: (self?.currentLocation?.coordinate.latitude ?? 43.6532, self?.currentLocation?.coordinate.longitude ?? -79.3832))
+                                
+                                let savedPlace = self?.savedPlaces.first { $0.placeId == gPlace.placeId }
+                                let weight = savedPlace?.weight ?? 1
+                                
+                                return Place(
+                                    name: gPlace.name,
+                                    distance: distance,
+                                    rating: gPlace.rating ?? 0,
+                                    lat: gPlace.geometry.location.lat,
+                                    lng: gPlace.geometry.location.lng,
+                                    placeId: gPlace.placeId,
+                                    weight: weight
+                                )
+                            }
+                            // Clear error if we have results
+                            if self?.places.isEmpty == false {
+                                self?.searchErrorState = .none
+                            }
+                        }
+                    } else {
+                        print("❌ Text Search Error Status: \(decoded.status)")
+                        var errorMessage = decoded.status
+                        if let errorResponse = try? JSONDecoder().decode(GoogleAPIError.self, from: data) {
+                            errorMessage = errorResponse.errorMessage
+                            print("❌ Text Search Error Message: \(errorMessage)")
+                        }
+                        
+                        DispatchQueue.main.async {
+                            self?.places = []
+                            if decoded.status == "ZERO_RESULTS" {
+                                self?.searchErrorState = .zeroResults
+                            } else {
+                                switch decoded.status {
+                                case "REQUEST_DENIED":
+                                    if errorMessage.contains("API key") || errorMessage.contains("key") {
+                                        self?.searchErrorState = .apiKeyInvalid
+                                    } else {
+                                        self?.searchErrorState = .apiError(errorMessage)
+                                    }
+                                case "INVALID_REQUEST":
+                                    self?.searchErrorState = .apiError("Invalid request: \(errorMessage)")
+                                case "OVER_QUERY_LIMIT":
+                                    self?.searchErrorState = .apiError("API quota exceeded. Please try again later.")
+                                default:
+                                    self?.searchErrorState = .apiError(errorMessage)
+                                }
+                            }
                         }
                     }
                 } else {
                     print("❌ Text Search: Failed to decode response")
-                    DispatchQueue.main.async { self?.places = [] }
+                    DispatchQueue.main.async {
+                        self?.places = []
+                        self?.searchErrorState = .unknownError
+                    }
                 }
             } catch {
                 print("❌ Text Search Decoding Error: \(error)")
-                DispatchQueue.main.async { self?.places = [] }
+                DispatchQueue.main.async {
+                    self?.places = []
+                    self?.searchErrorState = .unknownError
+                }
             }
         }.resume()
     }
     
     var filtered: [Place] {
-        places.filter { $0.rating >= minRating && $0.distance <= maxDistance }
+        let filtered = places.filter { $0.rating >= minRating && $0.distance <= maxDistance }
+        
+        // Check if filters are too restrictive (only update if state needs to change)
+        if hasSearched && !places.isEmpty && filtered.isEmpty && 
+           searchErrorState != .zeroResults && searchErrorState != .filtersTooRestrictive {
+            DispatchQueue.main.async { [weak self] in
+                self?.searchErrorState = .filtersTooRestrictive
+            }
+        } else if hasSearched && !filtered.isEmpty && searchErrorState == .filtersTooRestrictive {
+            // Clear the filter error if we now have results
+            DispatchQueue.main.async { [weak self] in
+                self?.searchErrorState = .none
+            }
+        }
+        
+        return filtered
     }
     
     func decide() {
@@ -268,6 +434,8 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
     func clearAllPlaces() {
         places.removeAll()
         selectedPlace = nil
+        searchErrorState = .noSearchPerformed
+        hasSearched = false
     }
     
     func fetchPlaceDetails(placeId: String, completion: @escaping (PlaceDetail?) -> Void) {
@@ -304,6 +472,7 @@ class MapDecisionViewModel: NSObject, ObservableObject, CLLocationManagerDelegat
 // MARK: - Google Places API Response Models
 
 struct GPlacesResponse: Codable {
+    let status: String
     let results: [GPlace]
 }
 
