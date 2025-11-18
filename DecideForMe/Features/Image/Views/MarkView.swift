@@ -42,28 +42,28 @@ struct MarkView: View {
         VStack(spacing: 2) {
             ZStack {
                 Circle()
-                    .fill(isSelected ? Color.red : Color.orange)
+                    .fill(isSelected ? AppTheme.Colors.secondary : AppTheme.Colors.primary)
                     .frame(width: markSize, height: markSize)
-                    .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                    .applyShadow(isSelected ? AppTheme.Shadows.markSelected : AppTheme.Shadows.mark)
                 
                 Text("\(mark.numericId)")
                     .font(.system(size: fontSize, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(AppTheme.Colors.textOnPrimary)
             }
             
             Text(mark.displayName)
                 .font(.system(size: max(fontSize - 4, 8), weight: .medium))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Color.white.opacity(0.9))
-                .foregroundColor(.black)
-                .cornerRadius(8)
-                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                .background(AppTheme.Colors.background.opacity(0.9))
+                .foregroundColor(AppTheme.Colors.textPrimary)
+                .cornerRadius(AppTheme.CornerRadius.small)
+                .applyShadow(AppTheme.Shadows.small)
         }
         .position(scaledPosition)
         .onTapGesture(perform: onTap)
         .scaleEffect(isSelected ? 1.2 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+        .animation(AppTheme.Animations.spring, value: isSelected)
     }
 }
 

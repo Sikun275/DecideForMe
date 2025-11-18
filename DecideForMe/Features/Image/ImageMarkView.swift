@@ -16,8 +16,8 @@ struct ImageMarkView: View {
         ZStack {
             Color.white.ignoresSafeArea()
             
-            VStack(spacing: 16) {
-                ImageHeaderView()
+            VStack(spacing: AppTheme.Spacing.lg) {
+                ImageHeaderView(hasSelectedImage: vm.selectedImage != nil)
                 ImageSelectionView(vm: vm, showingSourceActionSheet: $showingSourceActionSheet)
                 ImageDisplayView(vm: vm)
                 MarksListView(vm: vm)
@@ -34,7 +34,7 @@ struct ImageMarkView: View {
                 }) {
                     Image(systemName: "chevron.left")
                         .font(.title3)
-                        .foregroundColor(.orange)
+                        .foregroundColor(AppTheme.Colors.primary)
                 }
             }
         }

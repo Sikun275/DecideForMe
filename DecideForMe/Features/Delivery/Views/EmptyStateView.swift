@@ -2,21 +2,21 @@ import SwiftUI
 
 struct EmptyStateView: View {
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AppTheme.Spacing.lg) {
             Image(systemName: "list.bullet.clipboard")
                 .font(.system(size: 40))
-                .foregroundColor(.gray.opacity(0.5))
+                .foregroundColor(AppTheme.Colors.textTertiary)
             
             Text("No options yet")
-                .font(.headline)
-                .foregroundColor(.gray)
+                .font(AppTheme.Fonts.headline)
+                .foregroundColor(AppTheme.Colors.textSecondary)
             
             Text("Add some options above to get started")
-                .font(.caption)
-                .foregroundColor(.gray.opacity(0.7))
+                .font(AppTheme.Fonts.caption)
+                .foregroundColor(AppTheme.Colors.textTertiary)
                 .multilineTextAlignment(.center)
         }
-        .padding(40)
+        .padding(AppTheme.Spacing.xxxl)
         .frame(maxWidth: .infinity)
     }
 }

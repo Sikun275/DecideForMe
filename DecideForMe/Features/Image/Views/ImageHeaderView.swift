@@ -1,25 +1,29 @@
 import SwiftUI
 
 struct ImageHeaderView: View {
+    let hasSelectedImage: Bool
+    
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppTheme.Spacing.sm) {
             HStack {
                 Image(systemName: "photo")
                     .font(.title2)
-                    .foregroundColor(.orange)
+                    .foregroundColor(AppTheme.Colors.primary)
                 Text("Visual Decisions")
                     .font(.title2.bold())
-                    .foregroundColor(.black)
+                    .foregroundColor(AppTheme.Colors.textPrimary)
                 Spacer()
             }
             
-            Text("Take your photo shot and let us choose for you")
-                .font(.subheadline)
-                .foregroundColor(.gray)
+            Text(hasSelectedImage ? "Tap to start" : "Take a photo")
+                .font(AppTheme.Fonts.body)
+                .foregroundColor(AppTheme.Colors.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
         }
     }
 }
 
 #Preview {
-    ImageHeaderView()
+    ImageHeaderView(hasSelectedImage: false)
 }

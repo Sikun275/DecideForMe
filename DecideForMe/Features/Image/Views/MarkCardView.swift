@@ -7,38 +7,28 @@ struct MarkCardView: View {
     
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 8) {
+            VStack(spacing: AppTheme.Spacing.sm) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.red : Color.orange)
+                        .fill(isSelected ? AppTheme.Colors.secondary : AppTheme.Colors.primary)
                         .frame(width: 40, height: 40)
-                        .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
+                        .applyShadow(isSelected ? AppTheme.Shadows.markSelected : AppTheme.Shadows.mark)
                     
                     Text("\(mark.numericId)")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(AppTheme.Colors.textOnPrimary)
                 }
                 
                 Text(mark.displayName)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundColor(.black)
+                    .font(AppTheme.Fonts.caption)
+                    .foregroundColor(AppTheme.Colors.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
             }
             .frame(width: 90, height: 80)
-            .padding(8)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.red.opacity(0.1) : Color.orange.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.red : Color.orange, lineWidth: isSelected ? 2 : 1)
-            )
-            .scaleEffect(isSelected ? 1.05 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+            .padding(AppTheme.Spacing.sm)
         }
-        .buttonStyle(PlainButtonStyle())
+        .markCardButton(isSelected: isSelected)
     }
 }
 
@@ -46,6 +36,11 @@ struct MarkCardView: View {
     MarkCardView(
         mark: ImageMark(numericId: 1, position: CGPoint(x: 100, y: 100)),
         isSelected: false,
+        onTap: {}
+    )
+    MarkCardView(
+        mark: ImageMark(numericId: 2, position: CGPoint(x: 200, y: 200)),
+        isSelected: true,
         onTap: {}
     )
 }

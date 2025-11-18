@@ -5,27 +5,20 @@ struct ImageSelectionView: View {
     @Binding var showingSourceActionSheet: Bool
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppTheme.Spacing.md) {
             Button(action: { showingSourceActionSheet = true }) {
-                HStack(spacing: 8) {
+                HStack(spacing: AppTheme.Spacing.sm) {
                     Image(systemName: "photo.on.rectangle")
                         .font(.system(size: 16, weight: .medium))
                     Text("Select Image")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(AppTheme.Fonts.body)
                 }
-                .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(
-                    LinearGradient(colors: [Color.orange, Color.orange.opacity(0.8)], startPoint: .leading, endPoint: .trailing)
-                )
-                .cornerRadius(12)
-                .shadow(color: .orange.opacity(0.3), radius: 4, x: 0, y: 2)
             }
+            .primaryButton(size: .medium)
             
             if !vm.marks.isEmpty {
                 Button(action: {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    withAnimation(AppTheme.Animations.spring) {
                         vm.clearAllMarks()
                     }
                 }) {
@@ -33,18 +26,10 @@ struct ImageSelectionView: View {
                         Image(systemName: "trash")
                             .font(.system(size: 14, weight: .medium))
                         Text("Clear All")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(AppTheme.Fonts.body)
                     }
-                    .foregroundColor(.red)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(Color.red.opacity(0.1))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.red.opacity(0.3), lineWidth: 1)
-                    )
                 }
+                .secondaryButton(color: AppTheme.Colors.secondary)
             }
             
             Spacer()

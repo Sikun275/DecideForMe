@@ -16,12 +16,8 @@ struct ContentView: View {
         NavigationStack(path: $navigationPath) {
             ZStack {
                 // Background gradient
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.white, Color.orange.opacity(0.1)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                AppTheme.Colors.backgroundGradient
+                    .ignoresSafeArea()
                 
                 VStack(spacing: 40) {
                     // Logo and App Title
@@ -31,12 +27,12 @@ struct ContentView: View {
                             .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: isAnimating)
                         
                         Text("DecideForMe")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundColor(.black)
+                            .font(AppTheme.Fonts.title)
+                            .foregroundColor(AppTheme.Colors.textPrimary)
                         
                         Text("'idk lol' isn't a strategy")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.orange)
+                            .font(AppTheme.Fonts.subtitle)
+                            .foregroundColor(AppTheme.Colors.primary)
                             .opacity(0.8)
                             .multilineTextAlignment(.center)
                     }
@@ -87,9 +83,9 @@ struct ContentView: View {
                     
                     // Footer
                     Text("Tap any button to get started :)")
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
-                        .foregroundColor(.gray)
-                        .padding(.bottom, 20)
+                        .font(AppTheme.Fonts.body)
+                        .foregroundColor(AppTheme.Colors.textSecondary)
+                        .padding(.bottom, AppTheme.Spacing.xl)
                 }
                 .padding()
             }
@@ -117,13 +113,13 @@ struct LogoView: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(Color.orange)
+                .fill(AppTheme.Colors.primary)
                 .frame(width: 80, height: 80)
-                .shadow(color: .orange.opacity(0.3), radius: 10, x: 0, y: 5)
+                .applyShadow(AppTheme.Shadows.logo)
             
             Image(systemName: "dice.fill")
                 .font(.system(size: 40))
-                .foregroundColor(.white)
+                .foregroundColor(AppTheme.Colors.textOnPrimary)
         }
     }
 }
@@ -137,34 +133,23 @@ struct FeatureButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 12) {
+            VStack(spacing: AppTheme.Spacing.md) {
                 Image(systemName: icon)
                     .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(isSelected ? .white : .orange)
+                    .foregroundColor(isSelected ? AppTheme.Colors.textOnPrimary : AppTheme.Colors.primary)
                 
                 Text(title.capitalized)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundColor(isSelected ? .white : .black)
+                    .font(AppTheme.Fonts.headline)
+                    .foregroundColor(isSelected ? AppTheme.Colors.textOnPrimary : AppTheme.Colors.textPrimary)
                 
                 Text(description)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundColor(isSelected ? .white.opacity(0.9) : .gray)
+                    .font(AppTheme.Fonts.caption)
+                    .foregroundColor(isSelected ? AppTheme.Colors.textOnPrimary.opacity(0.9) : AppTheme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
             .frame(width: 140, height: 120)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(isSelected ? Color.orange : Color.white)
-                    .shadow(color: isSelected ? .orange.opacity(0.4) : .black.opacity(0.1), radius: 8, x: 0, y: 4)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.orange, lineWidth: isSelected ? 0 : 2)
-            )
-            .scaleEffect(isSelected ? 1.05 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
         }
-        .buttonStyle(PlainButtonStyle())
+        .featureButton(isSelected: isSelected)
     }
 }
 

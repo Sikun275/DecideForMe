@@ -2,24 +2,24 @@ import SwiftUI
 
 struct EmptyImageView: View {
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AppTheme.Spacing.lg) {
             Image(systemName: "photo.badge.plus")
                 .font(.system(size: 60))
-                .foregroundColor(.gray.opacity(0.5))
+                .foregroundColor(AppTheme.Colors.textTertiary)
             
             Text("No image selected")
-                .font(.headline)
-                .foregroundColor(.gray)
+                .font(AppTheme.Fonts.headline)
+                .foregroundColor(AppTheme.Colors.textSecondary)
             
             Text("Select an image from your library or take a photo to start marking")
-                .font(.caption)
-                .foregroundColor(.gray.opacity(0.7))
+                .font(AppTheme.Fonts.caption)
+                .foregroundColor(AppTheme.Colors.textTertiary)
                 .multilineTextAlignment(.center)
         }
-        .padding(40)
+        .padding(AppTheme.Spacing.xxxl)
         .frame(maxWidth: .infinity)
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(16)
+        .background(AppTheme.Colors.backgroundSecondary)
+        .cornerRadius(AppTheme.CornerRadius.large)
     }
 }
 

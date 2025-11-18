@@ -7,45 +7,45 @@ struct PlaceRowView: View {
     @State private var showingDetailPreview = false
     
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(spacing: AppTheme.Spacing.md) {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 Text(place.name)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.black)
+                    .foregroundColor(AppTheme.Colors.textPrimary)
                 
-                HStack(spacing: 12) {
-                    HStack(spacing: 4) {
+                HStack(spacing: AppTheme.Spacing.md) {
+                    HStack(spacing: AppTheme.Spacing.xs) {
                         Image(systemName: "location")
-                            .font(.caption)
-                            .foregroundColor(.orange)
+                            .font(AppTheme.Fonts.caption)
+                            .foregroundColor(AppTheme.Colors.primary)
                         Text(String(format: "%.2f km", place.distance / 1000))
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(AppTheme.Fonts.caption)
+                            .foregroundColor(AppTheme.Colors.textSecondary)
                     }
                     
-                    HStack(spacing: 4) {
+                    HStack(spacing: AppTheme.Spacing.xs) {
                         Image(systemName: "star.fill")
-                            .font(.caption)
-                            .foregroundColor(.orange)
+                            .font(AppTheme.Fonts.caption)
+                            .foregroundColor(AppTheme.Colors.primary)
                         Text(String(format: "%.1f", place.rating))
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(AppTheme.Fonts.caption)
+                            .foregroundColor(AppTheme.Colors.textSecondary)
                     }
                     
-                    HStack(spacing: 4) {
+                    HStack(spacing: AppTheme.Spacing.xs) {
                         Image(systemName: "hand.thumbsup.fill")
-                            .font(.caption)
-                            .foregroundColor(.orange)
+                            .font(AppTheme.Fonts.caption)
+                            .foregroundColor(AppTheme.Colors.primary)
                         Text("\(place.weight)")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(AppTheme.Fonts.caption)
+                            .foregroundColor(AppTheme.Colors.textSecondary)
                     }
                 }
             }
             
             Spacer()
             
-            HStack(spacing: 8) {
+            HStack(spacing: AppTheme.Spacing.sm) {
                 Button(action: { showingDetailPreview = true }) {
                     Image(systemName: "info.circle.fill")
                         .font(.title3)
@@ -56,17 +56,17 @@ struct PlaceRowView: View {
                 Button(action: onDelete) {
                     Image(systemName: "trash.circle.fill")
                         .font(.title3)
-                        .foregroundColor(.red.opacity(0.7))
+                        .foregroundColor(AppTheme.Colors.secondary.opacity(0.7))
                 }
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(16)
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(12)
+        .padding(AppTheme.Spacing.lg)
+        .background(AppTheme.Colors.backgroundSecondary)
+        .cornerRadius(AppTheme.CornerRadius.medium)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium)
+                .stroke(AppTheme.Colors.textSecondary.opacity(0.2), lineWidth: 1)
         )
         .sheet(isPresented: $showingDetailPreview) {
             PlaceDetailPreviewView(place: place, viewModel: viewModel)

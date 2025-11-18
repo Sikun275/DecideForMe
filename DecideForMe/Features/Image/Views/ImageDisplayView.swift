@@ -12,11 +12,11 @@ struct ImageDisplayView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 400)
-                    .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    .cornerRadius(AppTheme.CornerRadius.large)
+                    .applyShadow(AppTheme.Shadows.small)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.orange.opacity(0.3), lineWidth: 2)
+                        RoundedRectangle(cornerRadius: AppTheme.CornerRadius.large)
+                            .stroke(AppTheme.Colors.primary.opacity(0.3), lineWidth: 2)
                     )
                     .onTapGesture { location in
                         addMark(at: location)
@@ -42,7 +42,7 @@ struct ImageDisplayView: View {
                         imageSize: imageSize,
                         displaySize: displaySize
                     ) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        withAnimation(AppTheme.Animations.spring) {
                             vm.removeMark(mark)
                         }
                     }
@@ -59,7 +59,7 @@ struct ImageDisplayView: View {
         // Convert tap location to original image coordinates
         let scaledLocation = convertToImageCoordinates(location)
         
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+        withAnimation(AppTheme.Animations.spring) {
             vm.addMark(at: scaledLocation)
         }
         

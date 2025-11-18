@@ -6,20 +6,20 @@ struct MapSearchView: View {
     let onSearch: () -> Void
     
     var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
+        VStack(spacing: AppTheme.Spacing.lg) {
+            HStack(spacing: AppTheme.Spacing.md) {
                 HStack {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
+                        .foregroundColor(AppTheme.Colors.textSecondary)
                     TextField("Search for a place", text: $viewModel.keyword)
                         .textFieldStyle(PlainTextFieldStyle())
                 }
-                .padding(12)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(12)
+                .padding(AppTheme.Spacing.md)
+                .background(AppTheme.Colors.backgroundSecondary)
+                .cornerRadius(AppTheme.CornerRadius.medium)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium)
+                        .stroke(AppTheme.Colors.primary.opacity(0.3), lineWidth: 1)
                 )
                 
                 Button(action: onSearch) {
@@ -27,27 +27,16 @@ struct MapSearchView: View {
                         if isSearching {
                             ProgressView()
                                 .scaleEffect(0.8)
-                                .foregroundColor(.white)
+                                .foregroundColor(AppTheme.Colors.textOnPrimary)
                         } else {
                             Image(systemName: "arrow.right.circle.fill")
                                 .font(.title2)
                         }
                         Text("Search")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(AppTheme.Fonts.body)
                     }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(
-                        viewModel.keyword.isEmpty ? 
-                        AnyShapeStyle(Color.orange.opacity(0.4)) : 
-                        AnyShapeStyle(LinearGradient(colors: [Color.orange, Color.orange.opacity(0.8)], startPoint: .leading, endPoint: .trailing))
-                    )
-                    .cornerRadius(12)
                 }
-                .disabled(viewModel.keyword.isEmpty || isSearching)
-                .scaleEffect(viewModel.keyword.isEmpty ? 0.95 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: viewModel.keyword.isEmpty)
+                .primaryButton(isEnabled: !viewModel.keyword.isEmpty && !isSearching, size: .medium)
             }
         }
         .padding(.horizontal)

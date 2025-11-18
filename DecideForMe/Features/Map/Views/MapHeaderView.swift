@@ -2,20 +2,20 @@ import SwiftUI
 
 struct MapHeaderView: View {
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppTheme.Spacing.sm) {
             HStack {
                 Image(systemName: "map")
                     .font(.title2)
-                    .foregroundColor(.orange)
+                    .foregroundColor(AppTheme.Colors.primary)
                 Text("Places & Locations")
                     .font(.title2.bold())
-                    .foregroundColor(.black)
+                    .foregroundColor(AppTheme.Colors.textPrimary)
                 Spacer()
             }
             
             Text("Discover and decide on places to visit")
-                .font(.subheadline)
-                .foregroundColor(.gray)
+                .font(AppTheme.Fonts.body)
+                .foregroundColor(AppTheme.Colors.textSecondary)
         }
         .padding(.horizontal)
     }

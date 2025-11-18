@@ -7,46 +7,46 @@ struct AddOptionView: View {
     let onAdd: () -> Void
     
     var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
+        VStack(spacing: AppTheme.Spacing.lg) {
+            HStack(spacing: AppTheme.Spacing.md) {
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                     Text("Option Name")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .font(AppTheme.Fonts.caption)
+                        .foregroundColor(AppTheme.Colors.textSecondary)
                     TextField("e.g., Pizza, Sushi", text: $newName)
                         .textFieldStyle(PlainTextFieldStyle())
-                        .padding(12)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
+                        .padding(AppTheme.Spacing.md)
+                        .background(AppTheme.Colors.backgroundSecondary)
+                        .cornerRadius(AppTheme.CornerRadius.medium)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium)
+                                .stroke(AppTheme.Colors.primary.opacity(0.3), lineWidth: 1)
                         )
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                     Text("Tags")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .font(AppTheme.Fonts.caption)
+                        .foregroundColor(AppTheme.Colors.textSecondary)
                     TextField("cheap, fast, healthy", text: $newTags)
                         .textFieldStyle(PlainTextFieldStyle())
-                        .padding(12)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
+                        .padding(AppTheme.Spacing.md)
+                        .background(AppTheme.Colors.backgroundSecondary)
+                        .cornerRadius(AppTheme.CornerRadius.medium)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium)
+                                .stroke(AppTheme.Colors.primary.opacity(0.3), lineWidth: 1)
                         )
                 }
                 
                 Button(action: onAdd) {
                     Image(systemName: "plus.circle.fill")
                         .font(.title)
-                        .foregroundColor(.orange)
+                        .foregroundColor(AppTheme.Colors.primary)
                 }
                 .disabled(newName.isEmpty)
                 .scaleEffect(newName.isEmpty ? 0.8 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: newName.isEmpty)
+                .animation(AppTheme.Animations.easeInOut, value: newName.isEmpty)
             }
         }
         .padding(.horizontal)

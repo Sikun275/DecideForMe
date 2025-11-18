@@ -5,22 +5,22 @@ struct OptionRowView: View {
     let onDelete: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(spacing: AppTheme.Spacing.md) {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                 Text(option.name)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.black)
+                    .foregroundColor(AppTheme.Colors.textPrimary)
                 
                 if !option.tags.isEmpty {
-                    HStack(spacing: 4) {
+                    HStack(spacing: AppTheme.Spacing.xs) {
                         ForEach(option.tags, id: \.self) { tag in
                             Text(tag)
                                 .font(.system(size: 10, weight: .medium))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Color.orange.opacity(0.2))
-                                .foregroundColor(.orange)
-                                .cornerRadius(8)
+                                .background(AppTheme.Colors.primary.opacity(0.2))
+                                .foregroundColor(AppTheme.Colors.primary)
+                                .cornerRadius(AppTheme.CornerRadius.small)
                         }
                     }
                 }
@@ -28,25 +28,25 @@ struct OptionRowView: View {
             
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: AppTheme.Spacing.xs) {
                 Text("💪 \(option.weight)")
-                    .font(.caption)
-                    .foregroundColor(.orange)
+                    .font(AppTheme.Fonts.caption)
+                    .foregroundColor(AppTheme.Colors.primary)
                 
                 Button(action: onDelete) {
                     Image(systemName: "trash.circle.fill")
                         .font(.title3)
-                        .foregroundColor(.red.opacity(0.7))
+                        .foregroundColor(AppTheme.Colors.secondary.opacity(0.7))
                 }
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(16)
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(12)
+        .padding(AppTheme.Spacing.lg)
+        .background(AppTheme.Colors.backgroundSecondary)
+        .cornerRadius(AppTheme.CornerRadius.medium)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium)
+                .stroke(AppTheme.Colors.textSecondary.opacity(0.2), lineWidth: 1)
         )
     }
 }

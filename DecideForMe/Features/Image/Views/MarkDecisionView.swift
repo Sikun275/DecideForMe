@@ -5,15 +5,15 @@ struct MarkDecisionView: View {
     let onClear: () -> Void
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AppTheme.Spacing.lg) {
             HStack {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title2)
                     .foregroundColor(.green)
                 
                 Text("Selected Mark")
-                    .font(.headline)
-                    .foregroundColor(.black)
+                    .font(AppTheme.Fonts.headline)
+                    .foregroundColor(AppTheme.Colors.textPrimary)
                 
                 Spacer()
             }
@@ -21,40 +21,36 @@ struct MarkDecisionView: View {
             HStack {
                 ZStack {
                     Circle()
-                        .fill(Color.orange)
+                        .fill(AppTheme.Colors.primary)
                         .frame(width: 50, height: 50)
-                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        .applyShadow(AppTheme.Shadows.mark)
                     
                     Text("\(selectedMark.numericId)")
                         .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(AppTheme.Colors.textOnPrimary)
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                     Text(selectedMark.displayName)
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(.black)
+                        .foregroundColor(AppTheme.Colors.textPrimary)
                     
                     Text("Position: (\(Int(selectedMark.position.x)), \(Int(selectedMark.position.y)))")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                        .font(AppTheme.Fonts.caption)
+                        .foregroundColor(AppTheme.Colors.textSecondary)
                 }
                 
                 Spacer()
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.orange.opacity(0.1))
+                RoundedRectangle(cornerRadius: AppTheme.CornerRadius.medium)
+                    .fill(AppTheme.Colors.primaryLight)
             )
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-        )
+        .cardStyle(cornerRadius: AppTheme.CornerRadius.large)
     }
 }
 
