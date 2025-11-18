@@ -7,101 +7,93 @@ struct MapFiltersView: View {
     @State private var maxDistanceInput = ""
     
     var body: some View {
-        VStack(spacing: 12) {
-            Button(action: { withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { showFilters.toggle() } }) {
+        VStack(spacing: AppTheme.Spacing.md) {
+            Button(action: { withAnimation(AppTheme.Animations.spring) { showFilters.toggle() } }) {
                 HStack {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 14, weight: .medium))
                     Text("Filters")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(AppTheme.Fonts.body)
                     Spacer()
                     Image(systemName: showFilters ? "chevron.up" : "chevron.down")
                         .font(.system(size: 12, weight: .medium))
                 }
-                .foregroundColor(.orange)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(12)
+                .foregroundColor(AppTheme.Colors.primary)
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.vertical, AppTheme.Spacing.md)
+                .background(AppTheme.Colors.primaryLight)
+                .cornerRadius(AppTheme.CornerRadius.medium)
             }
             .buttonStyle(PlainButtonStyle())
             
             if showFilters {
-                VStack(spacing: 16) {
-                    HStack(spacing: 16) {
-                        VStack(alignment: .leading, spacing: 4) {
+                VStack(spacing: AppTheme.Spacing.lg) {
+                    HStack(spacing: AppTheme.Spacing.lg) {
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                             Text("Min Rating")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            HStack {
-                                TextField("0-5", text: $minRatingInput)
-                                    .keyboardType(.decimalPad)
-                                    .textFieldStyle(PlainTextFieldStyle())
-                                    .padding(8)
-                                    .background(Color.gray.opacity(0.1))
-                                    .cornerRadius(8)
-                                    .frame(width: 60)
-                                
-                                Button("Set") {
-                                    if let val = Double(minRatingInput), val >= 0, val <= 5 {
-                                        viewModel.minRating = val
-                                        minRatingInput = ""
-                                    }
-                                }
-                                .font(.caption)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.orange)
-                                .cornerRadius(6)
-                            }
+                                .font(AppTheme.Fonts.caption)
+                                .foregroundColor(AppTheme.Colors.textSecondary)
+                            TextField("0-5", text: $minRatingInput)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .padding(AppTheme.Spacing.sm)
+                                .background(AppTheme.Colors.backgroundSecondary)
+                                .cornerRadius(AppTheme.CornerRadius.small)
+                                .frame(width: 80)
                         }
                         
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                             Text("Max Distance (km)")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            HStack {
-                                TextField("0.1-50", text: $maxDistanceInput)
-                                    .keyboardType(.decimalPad)
-                                    .textFieldStyle(PlainTextFieldStyle())
-                                    .padding(8)
-                                    .background(Color.gray.opacity(0.1))
-                                    .cornerRadius(8)
-                                    .frame(width: 80)
-                                
-                                Button("Set") {
-                                    if let val = Double(maxDistanceInput), val >= 0.1, val <= 50 {
-                                        viewModel.maxDistance = val * 1000
-                                        maxDistanceInput = ""
-                                    }
-                                }
-                                .font(.caption)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.orange)
-                                .cornerRadius(6)
+                                .font(AppTheme.Fonts.caption)
+                                .foregroundColor(AppTheme.Colors.textSecondary)
+                            TextField("0.1-50", text: $maxDistanceInput)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .padding(AppTheme.Spacing.sm)
+                                .background(AppTheme.Colors.backgroundSecondary)
+                                .cornerRadius(AppTheme.CornerRadius.small)
+                                .frame(width: 100)
+                        }
+                        
+                        Spacer()
+                        
+                        Button("Set") {
+                            // Set min rating if valid
+                            if let ratingVal = Double(minRatingInput), ratingVal >= 0, ratingVal <= 5 {
+                                viewModel.minRating = ratingVal
+                                minRatingInput = ""
+                            }
+                            
+                            // Set max distance if valid
+                            if let distanceVal = Double(maxDistanceInput), distanceVal >= 0.1, distanceVal <= 50 {
+                                viewModel.maxDistance = distanceVal * 1000
+                                maxDistanceInput = ""
                             }
                         }
+                        .font(AppTheme.Fonts.caption)
+                        .foregroundColor(AppTheme.Colors.textOnPrimary)
+                        .padding(.horizontal, AppTheme.Spacing.sm)
+                        .padding(.vertical, AppTheme.Spacing.xs)
+                        .background(AppTheme.Colors.primary)
+                        .cornerRadius(AppTheme.CornerRadius.small)
                     }
                     
                     HStack {
                         Text("Current: ⭐️ \(String(format: "%.1f", viewModel.minRating)) | 📍 \(String(format: "%.1f", viewModel.maxDistance / 1000)) km")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(AppTheme.Fonts.caption)
+                            .foregroundColor(AppTheme.Colors.textSecondary)
                         Spacer()
                         Button("Reset") {
                             viewModel.minRating = 0
                             viewModel.maxDistance = 5000
                         }
-                        .font(.caption)
-                        .foregroundColor(.orange)
+                        .font(AppTheme.Fonts.caption)
+                        .foregroundColor(AppTheme.Colors.primary)
                     }
                 }
-                .padding(16)
-                .background(Color.gray.opacity(0.05))
-                .cornerRadius(12)
+                .padding(AppTheme.Spacing.lg)
+                .background(AppTheme.Colors.backgroundSecondary)
+                .cornerRadius(AppTheme.CornerRadius.medium)
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.9).combined(with: .opacity),
                     removal: .scale(scale: 0.9).combined(with: .opacity)
