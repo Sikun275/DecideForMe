@@ -33,6 +33,7 @@ struct MapFiltersView: View {
                             Text("Min Rating")
                                 .font(AppTheme.Fonts.caption)
                                 .foregroundColor(AppTheme.Colors.textSecondary)
+                                .fixedSize(horizontal: true, vertical: false)
                             TextField("0-5", text: $minRatingInput)
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(PlainTextFieldStyle())
@@ -41,11 +42,13 @@ struct MapFiltersView: View {
                                 .cornerRadius(AppTheme.CornerRadius.small)
                                 .frame(width: 80)
                         }
+                        .frame(minWidth: 100)
                         
                         VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                             Text("Max Distance (km)")
                                 .font(AppTheme.Fonts.caption)
                                 .foregroundColor(AppTheme.Colors.textSecondary)
+                                .fixedSize(horizontal: true, vertical: false)
                             TextField("0.1-50", text: $maxDistanceInput)
                                 .keyboardType(.decimalPad)
                                 .textFieldStyle(PlainTextFieldStyle())
@@ -54,8 +57,7 @@ struct MapFiltersView: View {
                                 .cornerRadius(AppTheme.CornerRadius.small)
                                 .frame(width: 100)
                         }
-                        
-                        Spacer()
+                        .frame(minWidth: 130)
                         
                         Button("Set") {
                             // Set min rating if valid
@@ -82,7 +84,9 @@ struct MapFiltersView: View {
                         Text("Current: ⭐️ \(String(format: "%.1f", viewModel.minRating)) | 📍 \(String(format: "%.1f", viewModel.maxDistance / 1000)) km")
                             .font(AppTheme.Fonts.caption)
                             .foregroundColor(AppTheme.Colors.textSecondary)
+
                         Spacer()
+                        
                         Button("Reset") {
                             viewModel.minRating = 0
                             viewModel.maxDistance = 5000
