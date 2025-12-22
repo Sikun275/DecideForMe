@@ -40,7 +40,7 @@ A SwiftUI iOS application that helps users make decisions through three distinct
 
 ## 📱 Screenshots
 
-*[Screenshots would be added here]*
+<img width="268" height="534" alt="Screenshot 2025-12-22 at 14 32 04" src="https://github.com/user-attachments/assets/98d4085d-975e-4801-89ca-608e7b69acf1" />
 
 ## 🔧 Setup Instructions
 
